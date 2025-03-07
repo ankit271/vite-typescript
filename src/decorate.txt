@@ -1,0 +1,255 @@
+A decorator is a special kind of declaration that can be attached to a class, method, property, or parameter to modify their behavior. Decorators are essentially functions that take a target (class or method) and optionally modify it.
+
+In the context of decorators in TypeScript, target refers to the object that is being decorated. It depends on where the decorator is applied (whether it's a class, method, property, or parameter), and it can represent different things in different scenarios.
+
+Let's break down target in different decorator contexts:
+
+1. Class Decorators
+When a class decorator is used, the target parameter represents the constructor function (or class itself) of the class being decorated.
+
+typescript
+Copy
+function logClass(target: Function) {
+  console.log(target);  // target is the class constructor
+}
+
+@logClass
+class Person {
+  constructor(public name: string) {}
+}
+Here, target is the class constructor of the Person class.
+The console.log(target) will log the class definition itself, which is a constructor function, i.e., function Person() {...}.
+2. Method Decorators
+In method decorators, the target refers to the prototype of the class to which the method belongs (or the class itself for static methods).
+
+typescript
+Copy
+function logMethod(target: any, key: string, descriptor: PropertyDescriptor) {
+  console.log(target);  // target is the prototype of the class
+  console.log(key);     // key is the name of the method
+  console.log(descriptor);  // descriptor contains the method's descriptor
+}
+
+class Calculator {
+  @logMethod
+  add(a: number, b: number): number {
+    return a + b;
+  }
+}
+In this case, target is the prototype of the Calculator class, not the Calculator class itself.
+target would be an object containing the methods and properties of the Calculator instance (not the constructor).
+key is the name of the method (add), and descriptor contains information about the method, such as whether it's writable or configurable.
+3. Property Decorators
+In property decorators, the target is the prototype of the class (or the constructor if the property is static). It represents the class instance where the property belongs.
+
+typescript
+Copy
+function logProperty(target: any, key: string) {
+  console.log(target);  // target is the prototype of the class
+  console.log(key);     // key is the name of the property
+}
+
+class Person {
+  @logProperty
+  name: string;
+}
+Here, target is the prototype of the Person class.
+The target is the object that holds the property name and its associated metadata.
+4. Parameter Decorators
+In parameter decorators, the target refers to the prototype of the class (for instance methods) or the constructor (for static methods), similar to method and property decorators. It is the class where the method with the parameter belongs.
+
+typescript
+Copy
+function logParameter(target: any, methodName: string, parameterIndex: number) {
+  console.log(target);  // target is the prototype of the class (or constructor for static methods)
+  console.log(methodName); // method name
+  console.log(parameterIndex); // index of the parameter
+}
+
+class Employee {
+  greet(@logParameter name: string) {
+    console.log(`Hello, ${name}`);
+  }
+}
+In this case, target is the prototype of the Employee class.
+Summary of target in Decorators:
+Class Decorators: target is the constructor function (the class itself).
+Method Decorators: target is the prototype of the class (for instance methods) or the constructor (for static methods).
+Property Decorators: target is the prototype of the class.
+Parameter Decorators: target is the prototype of the class (for instance methods) or the constructor (for static methods).
+Why is target Important?
+The target gives you access to the object you want to modify or inspect.
+For instance, in a method decorator, modifying the method's behavior would involve modifying its prototype (the target), while in a property decorator, you may modify how the property behaves by modifying the prototype or defining getter/setter behavior.
+
+
+
+--------------------------------------------------------
+Scenario 1: User Management System
+Imagine you're building a user management system where you need to handle different actions like creating a user, logging in, and sending emails.
+
+Static methods could be used for utility functions that don't require an instance of a user (e.g., validating an email address, generating a user ID).
+Normal (instance) methods would be used to interact with instance-specific data (e.g., user properties like username, email, etc.).
+Example: User Class
+javascript
+Copy
+class User {
+  constructor(username, email) {
+    this.username = username;
+    this.email = email;
+  }
+
+  // Normal (Instance) Method: Instance-specific actions
+  greet() {
+    console.log(`Hello, ${this.username}! Welcome back.`);
+  }
+
+  // Normal (Instance) Method: Instance-specific actions
+  updateEmail(newEmail) {
+    if (User.isValidEmail(newEmail)) {
+      this.email = newEmail;
+      console.log(`Email updated to ${newEmail}`);
+    } else {
+      console.log("Invalid email address.");
+    }
+  }
+
+  // Static Method: Doesn't rely on instance-specific data
+  static isValidEmail(email) {
+    // Simple validation check
+    return email.includes('@');
+  }
+
+  // Static Method: Utility method
+  static createGuestUser() {
+    // A static method used to create a default guest user without any instance data
+    return new User('Guest', 'guest@example.com');
+  }
+}
+
+// Creating an instance of User
+const user1 = new User("Alice", "alice@example.com");
+
+// Calling instance method
+user1.greet();  // Hello, Alice! Welcome back.
+user1.updateEmail("newemail@example.com"); // Email updated to newemail@example.com
+
+// Calling static method (no need for an instance)
+console.log(User.isValidEmail("invalidEmail")); // false
+console.log(User.isValidEmail("valid@example.com")); // true
+
+// Calling static method to create a default guest user
+const guestUser = User.createGuestUser();
+guestUser.greet(); // Hello, Guest! Welcome back.
+Explanation of Example:
+Normal (Instance) Methods:
+
+greet: This method depends on the instance's properties (username). It is an instance method because it uses this to access this.username and other instance-specific data.
+updateEmail: This method updates the email property of the instance. It relies on the specific instance's data (like the email).
+Static Methods:
+
+isValidEmail: This is a utility function to validate an email format. It doesn’t need any instance data, so it is defined as a static method. It can be called without creating an instance.
+createGuestUser: This method creates a default "guest" user without requiring any instance data. It returns a new User object, but since it doesn’t depend on any instance properties, it's defined as static.
+When to Use Static Methods:
+Utility Functions: When the method performs an operation that doesn't rely on instance-specific data, such as validation, formatting, or creating utility data.
+
+Example: isValidEmail, formatDate, generateUserId, parseJson.
+Factory Methods: When you want to provide a specific way to create instances of the class, such as returning a "default" instance or based on some logic.
+
+Example: createGuestUser could return a default guest user or an admin user, while the normal methods operate on the user’s instance-specific properties.
+Singleton Pattern: When you want a single instance of a class across your application, you might have a static method that manages that instance (e.g., connecting to a database, managing configuration).
+
+javascript
+Copy
+class DatabaseConnection {
+  static instance = null;
+
+  static getInstance() {
+    if (!DatabaseConnection.instance) {
+      DatabaseConnection.instance = new DatabaseConnection();
+    }
+    return DatabaseConnection.instance;
+  }
+
+  query(sql) {
+    console.log(`Running query: ${sql}`);
+  }
+}
+
+// Usage
+const db1 = DatabaseConnection.getInstance();
+const db2 = DatabaseConnection.getInstance();
+console.log(db1 === db2); // true, because it's the same instance
+Scenario 2: Car Rental System
+In a car rental system, each car can have specific details, like make, model, and availability. But some operations, like calculating the rental price based on the car's model, do not require an instance of the car.
+
+Example: Car Class
+javascript
+Copy
+class Car {
+  constructor(make, model, year) {
+    this.make = make;
+    this.model = model;
+    this.year = year;
+    this.isAvailable = true;
+  }
+
+  // Normal (Instance) Method: Instance-specific actions
+  rent() {
+    if (this.isAvailable) {
+      this.isAvailable = false;
+      console.log(`${this.model} is now rented.`);
+    } else {
+      console.log(`${this.model} is not available for rent.`);
+    }
+  }
+
+  // Normal (Instance) Method: Instance-specific actions
+  returnCar() {
+    this.isAvailable = true;
+    console.log(`${this.model} has been returned.`);
+  }
+
+  // Static Method: Utility method that applies to all cars
+  static calculateRentalPrice(model) {
+    const basePrice = 100; // base price per day
+    const modelMultiplier = {
+      "Sedan": 1.2,
+      "SUV": 1.5,
+      "Sports": 2.0
+    };
+    return basePrice * (modelMultiplier[model] || 1);
+  }
+}
+
+// Creating an instance of Car
+const car1 = new Car("Toyota", "Camry", 2022);
+const car2 = new Car("Tesla", "Model S", 2023);
+
+// Calling instance methods
+car1.rent();    // Camry is now rented.
+car1.returnCar();  // Camry has been returned.
+
+// Calling static method for calculating rental price
+console.log(Car.calculateRentalPrice("Sedan"));  // 120
+console.log(Car.calculateRentalPrice("Sports")); // 200
+Explanation of Example:
+Normal (Instance) Methods:
+
+rent: This method is used to rent a specific car. It interacts with the instance’s property (this.isAvailable), so it is an instance method.
+returnCar: Similar to rent, this method works with the instance’s properties and modifies this.isAvailable.
+Static Methods:
+
+calculateRentalPrice: This method calculates the rental price based on the model of the car. It doesn't need any instance data and can be called without an instance.
+When to Use Static Methods in the Car Rental Example:
+Model-based Utility: The calculateRentalPrice method is a utility that calculates rental prices based on the car model. It does not need instance-specific data, and thus, it's defined as a static method.
+Conclusion: When to Use Static vs Normal Methods
+Use normal (instance) methods when:
+
+The method operates on data specific to an instance (e.g., modifying or accessing properties of that instance).
+You need to perform actions that are tied to the individual object (e.g., renting a specific car, greeting a user).
+Use static methods when:
+
+The method does not depend on instance-specific data.
+You want to provide utility functions that are related to the class, but not tied to individual instances (e.g., validation, factory methods).
+You want to manage operations or state that should be shared across all instances (e.g., calculating a rental price, singleton pattern).
+Static methods provide a way to organize functionality that doesn’t need the full context of an instance, allowing you to keep your code modular and clean.
