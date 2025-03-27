@@ -13,7 +13,7 @@
         password: string;        
     }
        
-    class Sql<T> {
+    class Sql<T extends Mysql | Oracle> {
         
         public readonly dbname: string;
         public readonly username : string
@@ -21,9 +21,9 @@
         public readonly port?: number
 
         constructor(db : T) {
-            this.dbname = (db as any).dbname;
-            this.username = (db as any).username;
-            this.password = (db as any).password;
+            this.dbname = db.dbname;
+            this.username = db.username;
+            this.password = db.password;
 
             if((db as Mysql).port){
                 this.port = (db as any).port;
